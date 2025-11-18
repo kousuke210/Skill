@@ -1,4 +1,5 @@
 #pragma once
+#define NOMINMAX
 #include <string>
 #include <vector>
 #include <DxLib.h>
@@ -59,5 +60,5 @@ public:
     ~SkillTree();
     void setup_nodes(); // 初期ノードデータの作成と画像読み込み
     void update();      // 更新処理
-    void draw() const;  // 描画処理
+    void draw() const;  // 描画処理 (constを追加)
 };

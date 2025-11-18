@@ -1,29 +1,31 @@
-#include "SkillTree.h"
+ï»¿#include "SkillTree.h"
 #include <iostream>
 #include <algorithm>
 
-//--- [ ‰Šú‰»‚Æİ’è ] --------------------------------------------------------
+using namespace std;
+
+//--- [ åˆæœŸåŒ–ã¨è¨­å®š ] --------------------------------------------------------
 
 SkillTree::SkillTree(int initial_points) : current_skill_points_(initial_points) {
-    // ‰¼‚ÌƒAƒCƒRƒ“‰æ‘œ‚ğ“Ç‚İ‚ŞiÀÛ‚Íƒ†[ƒU[‚ª—pˆÓ‚µ‚½‰æ‘œ‚É’u‚«Š·‚¦‚Ä‚­‚¾‚³‚¢j
-    // DxLib‚ÌInitGraph()‚Æ“¯‚¶ˆ—
+    // ä»®ã®ã‚¢ã‚¤ã‚³ãƒ³ç”»åƒã‚’èª­ã¿è¾¼ã‚€ï¼ˆå®Ÿéš›ã¯ãƒ¦ãƒ¼ã‚¶ãƒ¼ãŒç”¨æ„ã—ãŸç”»åƒã«ç½®ãæ›ãˆã¦ãã ã•ã„ï¼‰
+    // DxLibã®InitGraph()ã¨åŒã˜å‡¦ç†
     int temp_icon = MakeScreen(NODE_SIZE, NODE_SIZE, TRUE);
     if (temp_icon != -1) {
         SetDrawScreen(temp_icon);
         ClearDrawScreen();
         DrawCircle(NODE_SIZE / 2, NODE_SIZE / 2, NODE_SIZE / 2 - 4, GetColor(100, 100, 255), TRUE);
         SetDrawScreen(DX_SCREEN_BACK);
-        DeleteGraph(temp_icon); // ˆê’Uíœ‚µ‚ÄAsetup_nodes‚Å‰ü‚ß‚Ä“Ç‚İ‚Ş
+        DeleteGraph(temp_icon); // ä¸€æ—¦å‰Šé™¤ã—ã¦ã€setup_nodesã§æ”¹ã‚ã¦èª­ã¿è¾¼ã‚€
     }
 
-    // ƒfƒtƒHƒ‹ƒg‚ÌƒAƒCƒRƒ“‚ğ”’ŠÛ‚Æ‚µ‚Äì¬
+    // ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®ã‚¢ã‚¤ã‚³ãƒ³ã‚’ç™½ä¸¸ã¨ã—ã¦ä½œæˆ
     int icon_base = MakeScreen(NODE_SIZE, NODE_SIZE, TRUE);
     SetDrawScreen(icon_base);
     ClearDrawScreen();
     DrawCircle(NODE_SIZE / 2, NODE_SIZE / 2, NODE_SIZE / 2 - 2, GetColor(255, 255, 255), TRUE);
     SetDrawScreen(DX_SCREEN_BACK);
 
-    // ÀÛ‚Ég—p‚·‚éƒAƒCƒRƒ“ƒnƒ“ƒhƒ‹
+    // å®Ÿéš›ã«ä½¿ç”¨ã™ã‚‹ã‚¢ã‚¤ã‚³ãƒ³ãƒãƒ³ãƒ‰ãƒ«
     int h_default = MakeScreen(NODE_SIZE, NODE_SIZE, TRUE);
     if (h_default != -1) {
         SetDrawScreen(h_default);
@@ -32,119 +34,120 @@ SkillTree::SkillTree(int initial_points) : current_skill_points_(initial_points)
         SetDrawScreen(DX_SCREEN_BACK);
     }
 
-    // ƒm[ƒh‚ÌƒZƒbƒgƒAƒbƒv
+    // ãƒãƒ¼ãƒ‰ã®ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—
     setup_nodes();
 
-    // ƒXƒLƒ‹ƒcƒŠ[‚Ì‘S‘Ì‚Ì‚‚³‚ğŒvZ‚µAÅ‘åƒXƒNƒ[ƒ‹—Ê‚ğİ’è
+    // ã‚¹ã‚­ãƒ«ãƒ„ãƒªãƒ¼ã®å…¨ä½“ã®é«˜ã•ã‚’è¨ˆç®—ã—ã€æœ€å¤§ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«é‡ã‚’è¨­å®š
     int max_y = 0;
     for (const auto& node : nodes_) {
         if (node.y > max_y) max_y = node.y;
     }
-    // ƒm[ƒh‚ÌYÀ•W‚ÌÅ‘å’l + ƒm[ƒh‚Ì‚‚³ - •\¦—Ìˆæ‚Ì‚‚³
+    // ãƒãƒ¼ãƒ‰ã®Yåº§æ¨™ã®æœ€å¤§å€¤ + ãƒãƒ¼ãƒ‰ã®é«˜ã• - è¡¨ç¤ºé ˜åŸŸã®é«˜ã•
     max_scroll_y_ = max(0, max_y + NODE_SIZE - VIEWPORT_H);
 }
 
 SkillTree::~SkillTree() {
-    // “Ç‚İ‚ñ‚¾ƒAƒCƒRƒ“‰æ‘œ‚Ì‰ğ•ú (¡‰ñ‚Íˆê‚Â‚ÌƒAƒCƒRƒ“‚ğg‚¢‰ñ‚µ‚Ä‚¢‚é‚Ì‚Å•s—v‚Èê‡‚à‚ ‚é)
-    // ÀÛ‚É•¡”‚Ì‰æ‘œ‚ğ“Ç‚İ‚ñ‚¾ê‡‚Í‚±‚±‚Å‰ğ•úˆ—‚ğs‚¤
+    // èª­ã¿è¾¼ã‚“ã ã‚¢ã‚¤ã‚³ãƒ³ç”»åƒã®è§£æ”¾ (ä»Šå›ã¯ä¸€ã¤ã®ã‚¢ã‚¤ã‚³ãƒ³ã‚’ä½¿ã„å›ã—ã¦ã„ã‚‹ã®ã§ä¸è¦ãªå ´åˆã‚‚ã‚ã‚‹)
+    // å®Ÿéš›ã«è¤‡æ•°ã®ç”»åƒã‚’èª­ã¿è¾¼ã‚“ã å ´åˆã¯ã“ã“ã§è§£æ”¾å‡¦ç†ã‚’è¡Œã†
 }
 
-// ƒ_ƒ~[‚ÌƒXƒLƒ‹ƒcƒŠ[ƒf[ƒ^‚ğì¬
+// ãƒ€ãƒŸãƒ¼ã®ã‚¹ã‚­ãƒ«ãƒ„ãƒªãƒ¼ãƒ‡ãƒ¼ã‚¿ã‚’ä½œæˆ
 void SkillTree::setup_nodes() {
-    // ƒAƒCƒRƒ“ƒnƒ“ƒhƒ‹‚ğƒ_ƒ~[‚Åì¬
+    // ã‚¢ã‚¤ã‚³ãƒ³ãƒãƒ³ãƒ‰ãƒ«ã‚’ãƒ€ãƒŸãƒ¼ã§ä½œæˆ
     int h_icon = MakeScreen(NODE_SIZE, NODE_SIZE, TRUE);
     SetDrawScreen(h_icon);
     ClearDrawScreen();
     DrawCircle(NODE_SIZE / 2, NODE_SIZE / 2, NODE_SIZE / 2 - 4, GetColor(100, 200, 100), TRUE);
     SetDrawScreen(DX_SCREEN_BACK);
 
-    // 
+    // ãƒãƒ¼ãƒ‰ãƒ‡ãƒ¼ã‚¿ (push_backã«ä¿®æ­£ã—ã¦å¤ã„C++ç’°å¢ƒã«å¯¾å¿œ)
+    nodes_.clear(); // æ—¢å­˜ã®ãƒãƒ¼ãƒ‰ã‚’ã‚¯ãƒªã‚¢
 
-    [Image of Skill Tree Structure with Nodes and Lines]
+    // ID 0: ãƒ«ãƒ¼ãƒˆã‚¹ã‚­ãƒ«
+    nodes_.push_back(SkillNode{ 0, -1, VIEWPORT_W / 2 - NODE_SIZE / 2, NODE_SPACE_Y * 1, "ã‚¹ã‚¿ãƒ¼ãƒˆ", h_icon, 0, "ãƒ„ãƒªãƒ¼ã®èµ·ç‚¹ã‚¹ã‚­ãƒ«ã€‚", true });
 
+    // ãƒ†ã‚£ã‚¢ 2
+    nodes_.push_back(SkillNode{ 1, 0, VIEWPORT_W / 2 - NODE_SIZE / 2 - NODE_SPACE_X, NODE_SPACE_Y * 3, "æ”»æ’ƒåŠ›ã‚¢ãƒƒãƒ— I", h_icon, 10, "ç‰©ç†æ”»æ’ƒåŠ›ãŒå°‘ã—ä¸Šæ˜‡ã—ã¾ã™ã€‚", false });
+    nodes_.push_back(SkillNode{ 2, 0, VIEWPORT_W / 2 - NODE_SIZE / 2 + NODE_SPACE_X, NODE_SPACE_Y * 3, "é­”åŠ›ã‚¢ãƒƒãƒ— I", h_icon, 10, "é­”æ³•æ”»æ’ƒåŠ›ãŒå°‘ã—ä¸Šæ˜‡ã—ã¾ã™ã€‚", false });
 
-        // ƒm[ƒhƒf[ƒ^
-        nodes_ = {
-        // ID 0: ƒ‹[ƒgƒXƒLƒ‹
-        {0, -1, VIEWPORT_W / 2 - NODE_SIZE / 2, NODE_SPACE_Y * 1, "ƒXƒ^[ƒg", h_icon, 0, "ƒcƒŠ[‚Ì‹N“_ƒXƒLƒ‹B", true},
+    // ãƒ†ã‚£ã‚¢ 3 (ID 1ã‹ã‚‰æ´¾ç”Ÿ)
+    // â˜…â˜…â˜… ä¿®æ­£ç®‡æ‰€: (int)ã‚­ãƒ£ã‚¹ãƒˆã‚’è¿½åŠ  â˜…â˜…â˜…
+    nodes_.push_back(SkillNode{ 3, 1, VIEWPORT_W / 2 - NODE_SIZE / 2 - (int)(NODE_SPACE_X * 1.5), NODE_SPACE_Y * 5, "æ”»æ’ƒåŠ›ã‚¢ãƒƒãƒ— II", h_icon, 30, "ç‰©ç†æ”»æ’ƒåŠ›ãŒä¸­ç¨‹åº¦ä¸Šæ˜‡ã—ã¾ã™ã€‚", false });
+    nodes_.push_back(SkillNode{ 4, 1, VIEWPORT_W / 2 - NODE_SIZE / 2 - (int)(NODE_SPACE_X * 0.5), NODE_SPACE_Y * 5, "HPã‚¢ãƒƒãƒ— I", h_icon, 20, "æœ€å¤§HPãŒå°‘ã—ä¸Šæ˜‡ã—ã¾ã™ã€‚", false });
 
-        // ƒeƒBƒA 2
-        {1, 0, VIEWPORT_W / 2 - NODE_SIZE / 2 - NODE_SPACE_X, NODE_SPACE_Y * 3, "UŒ‚—ÍƒAƒbƒv I", h_icon, 10, "•¨—UŒ‚—Í‚ª­‚µã¸‚µ‚Ü‚·B", false},
-        {2, 0, VIEWPORT_W / 2 - NODE_SIZE / 2 + NODE_SPACE_X, NODE_SPACE_Y * 3, "–‚—ÍƒAƒbƒv I", h_icon, 10, "–‚–@UŒ‚—Í‚ª­‚µã¸‚µ‚Ü‚·B", false},
+    // ãƒ†ã‚£ã‚¢ 3 (ID 2ã‹ã‚‰æ´¾ç”Ÿ)
+    // â˜…â˜…â˜… ä¿®æ­£ç®‡æ‰€: (int)ã‚­ãƒ£ã‚¹ãƒˆã‚’è¿½åŠ  â˜…â˜…â˜…
+    nodes_.push_back(SkillNode{ 5, 2, VIEWPORT_W / 2 - NODE_SIZE / 2 + (int)(NODE_SPACE_X * 0.5), NODE_SPACE_Y * 5, "é­”åŠ›ã‚¢ãƒƒãƒ— II", h_icon, 30, "é­”æ³•æ”»æ’ƒåŠ›ãŒä¸­ç¨‹åº¦ä¸Šæ˜‡ã—ã¾ã™ã€‚", false });
+    nodes_.push_back(SkillNode{ 6, 2, VIEWPORT_W / 2 - NODE_SIZE / 2 + (int)(NODE_SPACE_X * 1.5), NODE_SPACE_Y * 5, "MPã‚¢ãƒƒãƒ— I", h_icon, 20, "æœ€å¤§MPãŒå°‘ã—ä¸Šæ˜‡ã—ã¾ã™ã€‚", false });
 
-        // ƒeƒBƒA 3 (ID 1‚©‚ç”h¶)
-        {3, 1, VIEWPORT_W / 2 - NODE_SIZE / 2 - NODE_SPACE_X * 1.5, NODE_SPACE_Y * 5, "UŒ‚—ÍƒAƒbƒv II", h_icon, 30, "•¨—UŒ‚—Í‚ª’†’ö“xã¸‚µ‚Ü‚·B", false},
-        {4, 1, VIEWPORT_W / 2 - NODE_SIZE / 2 - NODE_SPACE_X * 0.5, NODE_SPACE_Y * 5, "HPƒAƒbƒv I", h_icon, 20, "Å‘åHP‚ª­‚µã¸‚µ‚Ü‚·B", false},
+    // ãƒ†ã‚£ã‚¢ 4 (æ·±ã„ä½ç½®ã®ãƒãƒ¼ãƒ‰)
+    // â˜…â˜…â˜… ä¿®æ­£ç®‡æ‰€: (int)ã‚­ãƒ£ã‚¹ãƒˆã‚’è¿½åŠ  (ä¸è¦ã§ã—ãŸãŒå®‰å…¨ã®ãŸã‚æ®‹ã—ã¾ã™) â˜…â˜…â˜…
+    nodes_.push_back(SkillNode{ 7, 3, VIEWPORT_W / 2 - NODE_SIZE / 2 - (int)(NODE_SPACE_X * 1.5), NODE_SPACE_Y * 7, "ç©¶æ¥µã®ä¸€æ’ƒ", h_icon, 100, "å¼·åŠ›ãªä¸€æ’ƒã‚’ç¹°ã‚Šå‡ºã™ç©¶æ¥µã‚¹ã‚­ãƒ«ã€‚è§£æ”¾ã‚³ã‚¹ãƒˆãŒéå¸¸ã«é«˜ã„ã€‚", false });
+    nodes_.push_back(SkillNode{ 8, 7, VIEWPORT_W / 2 - NODE_SIZE / 2 - (int)(NODE_SPACE_X * 1.5), NODE_SPACE_Y * 9, "ãƒã‚¹ã‚¿ãƒªãƒ¼", h_icon, 200, "ã™ã¹ã¦ã®èƒ½åŠ›ã‚’å‘ä¸Šã•ã›ã‚‹ã€‚ãƒ„ãƒªãƒ¼ã®æœ€çµ‚ãƒãƒ¼ãƒ‰ã€‚", false });
 
-        // ƒeƒBƒA 3 (ID 2‚©‚ç”h¶)
-        {5, 2, VIEWPORT_W / 2 - NODE_SIZE / 2 + NODE_SPACE_X * 0.5, NODE_SPACE_Y * 5, "–‚—ÍƒAƒbƒv II", h_icon, 30, "–‚–@UŒ‚—Í‚ª’†’ö“xã¸‚µ‚Ü‚·B", false},
-        {6, 2, VIEWPORT_W / 2 - NODE_SIZE / 2 + NODE_SPACE_X * 1.5, NODE_SPACE_Y * 5, "MPƒAƒbƒv I", h_icon, 20, "Å‘åMP‚ª­‚µã¸‚µ‚Ü‚·B", false},
-
-        // ƒeƒBƒA 4 ([‚¢ˆÊ’u‚Ìƒm[ƒh)
-        {7, 3, VIEWPORT_W / 2 - NODE_SIZE / 2 - NODE_SPACE_X * 1.5, NODE_SPACE_Y * 7, "‹†‹É‚ÌˆêŒ‚", h_icon, 100, "‹­—Í‚ÈˆêŒ‚‚ğŒJ‚èo‚·‹†‹ÉƒXƒLƒ‹B‰ğ•úƒRƒXƒg‚ª”ñí‚É‚‚¢B", false},
-        {8, 7, VIEWPORT_W / 2 - NODE_SIZE / 2 - NODE_SPACE_X * 1.5, NODE_SPACE_Y * 9, "ƒ}ƒXƒ^ƒŠ[", h_icon, 200, "‚·‚×‚Ä‚Ì”\—Í‚ğŒüã‚³‚¹‚éBƒcƒŠ[‚ÌÅIƒm[ƒhB", false}
-    };
-
-    // ƒXƒLƒ‹ƒcƒŠ[‘S‘Ì‚Ì‚‚³‚ğÄŒvZ
+    // ã‚¹ã‚­ãƒ«ãƒ„ãƒªãƒ¼å…¨ä½“ã®é«˜ã•ã‚’å†è¨ˆç®—
     int max_y = 0;
     for (const auto& node : nodes_) {
         if (node.y > max_y) max_y = node.y;
     }
-    // ƒm[ƒh‚ÌYÀ•W‚ÌÅ‘å’l + ƒm[ƒh‚Ì‚‚³ - •\¦—Ìˆæ‚Ì‚‚³
+    // ãƒãƒ¼ãƒ‰ã®Yåº§æ¨™ã®æœ€å¤§å€¤ + ãƒãƒ¼ãƒ‰ã®é«˜ã• - è¡¨ç¤ºé ˜åŸŸã®é«˜ã•
     max_scroll_y_ = max(0, max_y + NODE_SIZE - VIEWPORT_H);
 }
 
-//--- [ XVˆ— ] --------------------------------------------------------------
+//--- [ æ›´æ–°å‡¦ç† ] --------------------------------------------------------------
 
 void SkillTree::update() {
     handle_input();
     clamp_scroll();
 }
 
-//--- [ ƒXƒLƒ‹‰ğ•úƒƒWƒbƒN ] ----------------------------------------------------
+//--- [ ã‚¹ã‚­ãƒ«è§£æ”¾ãƒ­ã‚¸ãƒƒã‚¯ ] ----------------------------------------------------
 
-// eƒXƒLƒ‹‚ª‰ğ•úÏ‚İ‚©ƒ`ƒFƒbƒN
+// è¦ªã‚¹ã‚­ãƒ«ãŒè§£æ”¾æ¸ˆã¿ã‹ãƒã‚§ãƒƒã‚¯
 bool SkillTree::is_parent_unlocked(int node_id) const {
-    const auto& node = nodes_[node_id];
-    if (node.parent_id == -1) return true; // ƒ‹[ƒgƒm[ƒh‚Íí‚É‰ğ•úÏ‚İ‚Æ‚İ‚È‚·
+    // node_idãŒnodes_ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã¨ã—ã¦æ©Ÿèƒ½ã—ã¦ã„ã‚‹å‰æ (0ã‹ã‚‰å§‹ã¾ã‚‹é€£ç•ª)
+    if (node_id < 0 || node_id >= nodes_.size()) return false;
 
+    const auto& node = nodes_[node_id];
+    if (node.parent_id == -1) return true; // ãƒ«ãƒ¼ãƒˆãƒãƒ¼ãƒ‰ã¯å¸¸ã«è§£æ”¾æ¸ˆã¿ã¨ã¿ãªã™
+
+    // è¦ªãƒãƒ¼ãƒ‰ã‚’IDã§æ¤œç´¢
     for (const auto& parent_node : nodes_) {
         if (parent_node.id == node.parent_id) {
             return parent_node.is_unlocked;
         }
     }
-    return false; // eƒm[ƒh‚ªŒ©‚Â‚©‚ç‚È‚¢ê‡‚Í‰ğ•ú•s‰Â
+    return false; // è¦ªãƒãƒ¼ãƒ‰ãŒè¦‹ã¤ã‹ã‚‰ãªã„å ´åˆã¯è§£æ”¾ä¸å¯
 }
 
-// ƒXƒLƒ‹‚Ì‰ğ•ú‚ğ‚İ‚é
+// ã‚¹ã‚­ãƒ«ã®è§£æ”¾ã‚’è©¦ã¿ã‚‹
 bool SkillTree::unlock_skill(int node_id) {
+    if (node_id < 0 || node_id >= nodes_.size()) return false;
+
     auto& node = nodes_[node_id];
 
-    if (node.is_unlocked) return false; // Šù‚É‰ğ•úÏ‚İ
+    if (node.is_unlocked) return false; // æ—¢ã«è§£æ”¾æ¸ˆã¿
 
     if (!is_parent_unlocked(node_id)) {
-        // std::cout << node.name << "‚ÍeƒXƒLƒ‹‚ª–¢‰ğ•ú‚Å‚·B\n";
-        return false; // eƒXƒLƒ‹‚ª–¢‰ğ•ú
+        return false; // è¦ªã‚¹ã‚­ãƒ«ãŒæœªè§£æ”¾
     }
 
     if (current_skill_points_ < node.cost) {
-        // std::cout << node.name << "‚Íƒ|ƒCƒ“ƒg‚ª•s‘«‚µ‚Ä‚¢‚Ü‚·B\n";
-        return false; // ƒ|ƒCƒ“ƒg•s‘«
+        return false; // ãƒã‚¤ãƒ³ãƒˆä¸è¶³
     }
 
-    // ‰ğ•ú¬Œ÷
+    // è§£æ”¾æˆåŠŸ
     node.is_unlocked = true;
     current_skill_points_ -= node.cost;
-    // std::cout << node.name << "‚ğ‰ğ•ú‚µ‚Ü‚µ‚½Bc‚èƒ|ƒCƒ“ƒg: " << current_skill_points_ << "\n";
 
     return true;
 }
 
 
-//--- [ “ü—Íˆ—‚ÆƒXƒNƒ[ƒ‹ ] -------------------------------------------------
+//--- [ å…¥åŠ›å‡¦ç†ã¨ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ« ] -------------------------------------------------
 
 void SkillTree::clamp_scroll() {
-    // ƒXƒNƒ[ƒ‹§ŒÀ: ãŒÀ‚Í0 (ˆê”Ôã)A‰ºŒÀ‚Í max_scroll_y_ (ˆê”Ô‰º)
+    // ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«åˆ¶é™: ä¸Šé™ã¯0 (ä¸€ç•ªä¸Š)ã€ä¸‹é™ã¯ max_scroll_y_ (ä¸€ç•ªä¸‹)
     scroll_offset_y_ = min(0, scroll_offset_y_);
     scroll_offset_y_ = max(-max_scroll_y_, scroll_offset_y_);
 }
@@ -155,66 +158,70 @@ void SkillTree::handle_input() {
     int mouse_button = GetMouseInput();
     int wheel_rot = GetMouseWheelRotVol();
 
-    // --- 1. ƒXƒNƒ[ƒ‹ˆ— ---
+    // --- 1. ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«å‡¦ç† ---
 
-    // ƒ}ƒEƒXƒzƒC[ƒ‹
+    // ãƒã‚¦ã‚¹ãƒ›ã‚¤ãƒ¼ãƒ«
     if (wheel_rot != 0) {
-        // ƒzƒC[ƒ‹ˆê‰ñ“]‚ÅNODE_SPACE_Y‚Ì–ñ1/4’ö“xƒXƒNƒ[ƒ‹
+        // ãƒ›ã‚¤ãƒ¼ãƒ«ä¸€å›è»¢ã§NODE_SPACE_Yã®ç´„1/4ç¨‹åº¦ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«
         scroll_offset_y_ += wheel_rot * (NODE_SPACE_Y / 4);
     }
 
-    // ƒ}ƒEƒXƒhƒ‰ƒbƒO‚ÌŠJn
+    // ãƒã‚¦ã‚¹ãƒ‰ãƒ©ãƒƒã‚°ã®é–‹å§‹
     if ((mouse_button & MOUSE_INPUT_LEFT) && !is_dragging_) {
         is_dragging_ = true;
         drag_start_y_ = mouse_y;
     }
 
-    // ƒ}ƒEƒXƒhƒ‰ƒbƒO’†
+    // ãƒã‚¦ã‚¹ãƒ‰ãƒ©ãƒƒã‚°ä¸­
     if (is_dragging_) {
-        // Œ»İ‚Ìƒ}ƒEƒXˆÊ’u‚Æ‘O‰ñ‚ÌˆÊ’u‚Ì·•ª‚ÅƒXƒNƒ[ƒ‹
+        // ç¾åœ¨ã®ãƒã‚¦ã‚¹ä½ç½®ã¨å‰å›ã®ä½ç½®ã®å·®åˆ†ã§ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«
         scroll_offset_y_ += (mouse_y - prev_mouse_y_);
     }
 
-    // ƒ}ƒEƒXƒ{ƒ^ƒ“‚ğ—£‚µ‚½‚çƒhƒ‰ƒbƒOI—¹
+    // ãƒã‚¦ã‚¹ãƒœã‚¿ãƒ³ã‚’é›¢ã—ãŸã‚‰ãƒ‰ãƒ©ãƒƒã‚°çµ‚äº†
     if (!(mouse_button & MOUSE_INPUT_LEFT)) {
         is_dragging_ = false;
     }
 
-    // --- 2. ƒNƒŠƒbƒNˆ— (ƒhƒ‰ƒbƒO’†‚Å‚È‚¢‚Æ‚«) ---
-    if (!is_dragging_ && (mouse_button & MOUSE_INPUT_LEFT) && !(GetMouseInput() & MOUSE_INPUT_LEFT)) {
-        // ƒ}ƒEƒX‚ÌƒNƒŠƒbƒNÀ•W‚Æƒm[ƒh‚Ì‰æ–ÊÀ•W‚ğ”äŠr
+    // --- 2. ã‚¯ãƒªãƒƒã‚¯å‡¦ç† (ãƒ‰ãƒ©ãƒƒã‚°ä¸­ã§ãªã„ã¨ã) ---
+    // (GetMouseInput() & MOUSE_INPUT_LEFT) ã®ãƒã‚§ãƒƒã‚¯ã‚’å¤–ã™ã“ã¨ã§ã€ãƒœã‚¿ãƒ³ãŒé›¢ã•ã‚ŒãŸç¬é–“ã«ã‚¯ãƒªãƒƒã‚¯ã¨åˆ¤å®šã™ã‚‹
+    if (!is_dragging_ && (mouse_button & MOUSE_INPUT_LEFT)) {
+        // ãƒã‚¦ã‚¹ã®ã‚¯ãƒªãƒƒã‚¯åº§æ¨™ã¨ãƒãƒ¼ãƒ‰ã®ç”»é¢åº§æ¨™ã‚’æ¯”è¼ƒ
 
-        // Ú×ƒpƒlƒ‹‚ÌƒNƒŠƒbƒN”»’è (‰ğ•úƒ{ƒ^ƒ“‚È‚Ç)
+        // è©³ç´°ãƒ‘ãƒãƒ«ã®ã‚¯ãƒªãƒƒã‚¯åˆ¤å®š (è§£æ”¾ãƒœã‚¿ãƒ³ãªã©)
         if (selected_node_id_ != -1) {
-            // Ú×ƒpƒlƒ‹‚Ìƒ{ƒ^ƒ“—Ìˆæ‚ğ”»’è (¡‰ñ‚ÍŠÈˆÕ“I‚É‰æ–Ê‰E‘¤‚ÉŒÅ’è)
-            int btn_x = VIEWPORT_W - 150;
-            int btn_y = VIEWPORT_H - 100;
+            // è©³ç´°ãƒ‘ãƒãƒ«ã®ãƒœã‚¿ãƒ³é ˜åŸŸã‚’åˆ¤å®š (ä»Šå›ã¯ç°¡æ˜“çš„ã«ç”»é¢å³å´ã«å›ºå®š)
+            int panel_w = 300;
+            int panel_h = 200;
+            int panel_x = VIEWPORT_W - panel_w - 10;
+            int btn_x = panel_x + panel_w / 2 - 50;
+            int btn_y = VIEWPORT_H - 10 - 50; // ãƒ‘ãƒãƒ«ã®Yåº§æ¨™ã‹ã‚‰è¨ˆç®—
+
             int btn_w = 100;
             int btn_h = 40;
 
             if (mouse_x >= btn_x && mouse_x < btn_x + btn_w &&
                 mouse_y >= btn_y && mouse_y < btn_y + btn_h)
             {
-                // ‰ğ•úƒ{ƒ^ƒ“‚ªƒNƒŠƒbƒN‚³‚ê‚½
+                // è§£æ”¾ãƒœã‚¿ãƒ³ãŒã‚¯ãƒªãƒƒã‚¯ã•ã‚ŒãŸ
                 unlock_skill(selected_node_id_);
-                // ƒNƒŠƒbƒN‚³‚ê‚½‚çAÚ×ƒpƒlƒ‹‚Ì‘I‘ğ‚ğˆÛ
+                // ã‚¯ãƒªãƒƒã‚¯ã•ã‚ŒãŸã‚‰ã€è©³ç´°ãƒ‘ãƒãƒ«ã®é¸æŠã‚’ç¶­æŒ
                 goto end_click_check;
             }
         }
 
-        // ƒm[ƒh‚ÌƒNƒŠƒbƒN”»’è
-        selected_node_id_ = -1; // ƒm[ƒh‚ªƒNƒŠƒbƒN‚³‚ê‚È‚¯‚ê‚Î‘I‘ğ‰ğœ
+        // ãƒãƒ¼ãƒ‰ã®ã‚¯ãƒªãƒƒã‚¯åˆ¤å®š
+        selected_node_id_ = -1; // ãƒãƒ¼ãƒ‰ãŒã‚¯ãƒªãƒƒã‚¯ã•ã‚Œãªã‘ã‚Œã°é¸æŠè§£é™¤
         for (const auto& node : nodes_) {
-            // ƒm[ƒh‚Ì‰æ–ÊÀ•W‚ğŒvZ
+            // ãƒãƒ¼ãƒ‰ã®ç”»é¢åº§æ¨™ã‚’è¨ˆç®—
             int screen_x = node.x;
             int screen_y = node.y + scroll_offset_y_;
 
-            // ƒ}ƒEƒXÀ•W‚ªƒm[ƒh‚Ì•`‰æ”ÍˆÍ“à‚É‚ ‚é‚©
+            // ãƒã‚¦ã‚¹åº§æ¨™ãŒãƒãƒ¼ãƒ‰ã®æç”»ç¯„å›²å†…ã«ã‚ã‚‹ã‹
             if (mouse_x >= screen_x && mouse_x < screen_x + NODE_SIZE &&
                 mouse_y >= screen_y && mouse_y < screen_y + NODE_SIZE)
             {
                 selected_node_id_ = node.id;
-                // std::cout << "Node Clicked: " << node.name << "\n";
                 break;
             }
         }
@@ -225,49 +232,49 @@ end_click_check:
 }
 
 
-//--- [ •`‰æˆ— ] --------------------------------------------------------------
+//--- [ æç”»å‡¦ç† ] --------------------------------------------------------------
 
 void SkillTree::draw() const {
-    // 1. Ú‘±ƒ‰ƒCƒ“‚Ì•`‰æ
+    // 1. æ¥ç¶šãƒ©ã‚¤ãƒ³ã®æç”»
     draw_connections();
 
-    // 2. ƒm[ƒh‚Ì•`‰æ
+    // 2. ãƒãƒ¼ãƒ‰ã®æç”»
     for (const auto& node : nodes_) {
         draw_node(node);
     }
 
-    // 3. Ú×ƒpƒlƒ‹‚Ì•`‰æ
+    // 3. è©³ç´°ãƒ‘ãƒãƒ«ã®æç”»
     draw_detail_panel();
 
-    // 4. Šƒ|ƒCƒ“ƒg‚Ì•\¦
-    DrawFormatString(10, 10, GetColor(255, 255, 0), "ƒXƒLƒ‹ƒ|ƒCƒ“ƒg: %d", current_skill_points_);
+    // 4. æ‰€æŒãƒã‚¤ãƒ³ãƒˆã®è¡¨ç¤º
+    DrawFormatString(10, 10, GetColor(255, 255, 0), "ã‚¹ã‚­ãƒ«ãƒã‚¤ãƒ³ãƒˆ: %d", current_skill_points_);
 }
 
 void SkillTree::draw_connections() const {
-    // ƒ‰ƒCƒ“‚ÌFiƒfƒtƒHƒ‹ƒg‚ÍŠDFj
+    // ãƒ©ã‚¤ãƒ³ã®è‰²ï¼ˆãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã¯ç°è‰²ï¼‰
     int default_color = GetColor(100, 100, 100);
-    int unlocked_color = GetColor(0, 255, 0); // ‰ğ•úÏ‚İ‚Ìƒ‰ƒCƒ“‚Í—Î
+    int unlocked_color = GetColor(0, 255, 0); // è§£æ”¾æ¸ˆã¿ã®ãƒ©ã‚¤ãƒ³ã¯ç·‘
 
     for (const auto& node : nodes_) {
         if (node.parent_id != -1) {
-            // eƒm[ƒh‚ğŒŸõ
+            // è¦ªãƒãƒ¼ãƒ‰ã‚’æ¤œç´¢
             const auto& parent_it = std::find_if(nodes_.begin(), nodes_.end(),
                 [&](const SkillNode& n) { return n.id == node.parent_id; });
 
             if (parent_it != nodes_.end()) {
                 const auto& parent_node = *parent_it;
 
-                // ü‚ÌF‚ğŒˆ’è
+                // ç·šã®è‰²ã‚’æ±ºå®š
                 int line_color = default_color;
                 if (node.is_unlocked) {
                     line_color = unlocked_color;
                 }
                 else if (is_parent_unlocked(node.id)) {
-                    // e‚ª‰ğ•úÏ‚İ‚ÅA©•ª‚ª–¢‰ğ•ú‚È‚ç‰ğ•ú‰Â”\‚Æ‚µ‚Ä‰©F
+                    // è¦ªãŒè§£æ”¾æ¸ˆã¿ã§ã€è‡ªåˆ†ãŒæœªè§£æ”¾ãªã‚‰è§£æ”¾å¯èƒ½ã¨ã—ã¦é»„è‰²
                     line_color = GetColor(255, 255, 0);
                 }
 
-                // ‰æ–ÊÀ•W‚É•ÏŠ·
+                // ç”»é¢åº§æ¨™ã«å¤‰æ›
                 int p_x = parent_node.x + NODE_SIZE / 2;
                 int p_y = parent_node.y + NODE_SIZE / 2 + scroll_offset_y_;
                 int c_x = node.x + NODE_SIZE / 2;
@@ -280,85 +287,85 @@ void SkillTree::draw_connections() const {
 }
 
 void SkillTree::draw_node(const SkillNode& node) const {
-    // ƒm[ƒh‚Ì‰æ–ÊÀ•W
+    // ãƒãƒ¼ãƒ‰ã®ç”»é¢åº§æ¨™
     int screen_x = node.x;
     int screen_y = node.y + scroll_offset_y_;
 
-    // •`‰æ”ÍˆÍŠO‚È‚çƒXƒLƒbƒv
+    // æç”»ç¯„å›²å¤–ãªã‚‰ã‚¹ã‚­ãƒƒãƒ—
     if (screen_y > VIEWPORT_H || screen_y + NODE_SIZE < 0) return;
 
-    // 1. ƒm[ƒhƒAƒCƒRƒ“‚Ì•`‰æ
+    // 1. ãƒãƒ¼ãƒ‰ã‚¢ã‚¤ã‚³ãƒ³ã®æç”»
     DrawGraph(screen_x, screen_y, node.icon_handle, TRUE);
 
-    // 2. ˜gü‚ÌF‚ğŒˆ’è
+    // 2. æ ç·šã®è‰²ã‚’æ±ºå®š
     int frame_color;
-    int cost_color = GetColor(255, 255, 255); // ƒRƒXƒg•\¦‚ÌF
+    int cost_color = GetColor(255, 255, 255); // ã‚³ã‚¹ãƒˆè¡¨ç¤ºã®è‰²
 
     if (node.id == selected_node_id_) {
-        frame_color = GetColor(255, 0, 255); // ‘I‘ğ’†: ƒ}ƒ[ƒ“ƒ^
+        frame_color = GetColor(255, 0, 255); // é¸æŠä¸­: ãƒã‚¼ãƒ³ã‚¿
     }
     else if (node.is_unlocked) {
-        frame_color = GetColor(0, 255, 0);   // ‰ğ•úÏ‚İ: —Î
-        cost_color = GetColor(150, 150, 150); // ‰ğ•úÏ‚İ‚ÌƒRƒXƒg‚ÍŠDF
+        frame_color = GetColor(0, 255, 0);   // è§£æ”¾æ¸ˆã¿: ç·‘
+        cost_color = GetColor(150, 150, 150); // è§£æ”¾æ¸ˆã¿ã®ã‚³ã‚¹ãƒˆã¯ç°è‰²
     }
     else if (is_parent_unlocked(node.id) && current_skill_points_ >= node.cost) {
-        frame_color = GetColor(255, 255, 0); // ‰ğ•ú‰Â”\: ‰©F
+        frame_color = GetColor(255, 255, 0); // è§£æ”¾å¯èƒ½: é»„è‰²
     }
     else if (is_parent_unlocked(node.id) && current_skill_points_ < node.cost) {
-        frame_color = GetColor(255, 100, 0); // ƒ|ƒCƒ“ƒg•s‘«: ƒIƒŒƒ“ƒW
+        frame_color = GetColor(255, 100, 0); // ãƒã‚¤ãƒ³ãƒˆä¸è¶³: ã‚ªãƒ¬ãƒ³ã‚¸
     }
     else {
-        frame_color = GetColor(150, 150, 150); // –¢‰ğ•ú: ŠDF
+        frame_color = GetColor(150, 150, 150); // æœªè§£æ”¾: ç°è‰²
     }
 
-    // 3. ˜gü‚Ì•`‰æ
+    // 3. æ ç·šã®æç”»
     DrawBox(screen_x - 2, screen_y - 2,
         screen_x + NODE_SIZE + 2, screen_y + NODE_SIZE + 2, frame_color, FALSE);
 
-    // 4. ƒRƒXƒg‚Ì•`‰æ (ƒm[ƒh‚Ì‰º)
+    // 4. ã‚³ã‚¹ãƒˆã®æç”» (ãƒãƒ¼ãƒ‰ã®ä¸‹)
     if (!node.is_unlocked && node.cost > 0) {
         DrawFormatString(screen_x, screen_y + NODE_SIZE + 5, cost_color, "C:%d", node.cost);
     }
 
-    // 5. ƒXƒLƒ‹–¼‚Ì•`‰æ (ƒm[ƒh‚Ì‰º)
+    // 5. ã‚¹ã‚­ãƒ«åã®æç”» (ãƒãƒ¼ãƒ‰ã®ä¸‹)
     // DrawFormatString(screen_x, screen_y + NODE_SIZE + 20, frame_color, "%s", node.name.c_str());
 }
 
 void SkillTree::draw_detail_panel() const {
     if (selected_node_id_ == -1) return;
 
-    // ‘I‘ğ‚³‚ê‚Ä‚¢‚éƒm[ƒh‚ğŒŸõ
+    // é¸æŠã•ã‚Œã¦ã„ã‚‹ãƒãƒ¼ãƒ‰ã‚’æ¤œç´¢
     const auto& it = std::find_if(nodes_.begin(), nodes_.end(),
         [&](const SkillNode& n) { return n.id == selected_node_id_; });
     if (it == nodes_.end()) return;
 
     const auto& node = *it;
 
-    // ƒpƒlƒ‹‚Ì•`‰æ—Ìˆæ (‰æ–Ê‰E‘¤‚ÉŒÅ’è)
+    // ãƒ‘ãƒãƒ«ã®æç”»é ˜åŸŸ (ç”»é¢å³å´ã«å›ºå®š)
     int panel_w = 300;
     int panel_h = 200;
     int panel_x = VIEWPORT_W - panel_w - 10;
     int panel_y = VIEWPORT_H - panel_h - 10;
 
-    // ƒpƒlƒ‹‚Ì”wŒi
+    // ãƒ‘ãƒãƒ«ã®èƒŒæ™¯
     DrawBox(panel_x, panel_y, panel_x + panel_w, panel_y + panel_h, GetColor(0, 0, 50), TRUE);
     DrawBox(panel_x, panel_y, panel_x + panel_w, panel_y + panel_h, GetColor(50, 50, 150), FALSE);
 
-    // ƒXƒLƒ‹–¼
-    DrawFormatString(panel_x + 10, panel_y + 10, GetColor(255, 255, 255), "ƒXƒLƒ‹–¼: %s", node.name.c_str());
+    // ã‚¹ã‚­ãƒ«å
+    DrawFormatString(panel_x + 10, panel_y + 10, GetColor(255, 255, 255), "ã‚¹ã‚­ãƒ«å: %s", node.name.c_str());
 
-    // ‰ğ•úó‘Ô
+    // è§£æ”¾çŠ¶æ…‹
     int status_color = node.is_unlocked ? GetColor(0, 255, 0) : GetColor(255, 0, 0);
-    DrawFormatString(panel_x + 10, panel_y + 40, GetColor(255, 255, 255), "ó‘Ô: ");
-    DrawFormatString(panel_x + 60, panel_y + 40, status_color, "%s", node.is_unlocked ? "‰ğ•úÏ‚İ" : "–¢‰ğ•ú");
+    DrawFormatString(panel_x + 10, panel_y + 40, GetColor(255, 255, 255), "çŠ¶æ…‹: ");
+    DrawFormatString(panel_x + 60, panel_y + 40, status_color, "%s", node.is_unlocked ? "è§£æ”¾æ¸ˆã¿" : "æœªè§£æ”¾");
 
-    // Ú×à–¾
-    DrawFormatString(panel_x + 10, panel_y + 70, GetColor(200, 200, 255), "à–¾:");
-    // à–¾‚Í’·‚¢‰Â”\«‚ª‚ ‚é‚Ì‚ÅAÜ‚è•Ô‚µˆ—‚ª•K—v‚Å‚·‚ªA‚±‚±‚Å‚ÍÈ—ª
+    // è©³ç´°èª¬æ˜
+    DrawFormatString(panel_x + 10, panel_y + 70, GetColor(200, 200, 255), "èª¬æ˜:");
+    // èª¬æ˜ã¯é•·ã„å¯èƒ½æ€§ãŒã‚ã‚‹ã®ã§ã€æŠ˜ã‚Šè¿”ã—å‡¦ç†ãŒå¿…è¦ã§ã™ãŒã€ã“ã“ã§ã¯çœç•¥
     DrawFormatString(panel_x + 10, panel_y + 90, GetColor(200, 200, 255), "%s", node.description.c_str());
 
 
-    // ‰ğ•úƒ{ƒ^ƒ“
+    // è§£æ”¾ãƒœã‚¿ãƒ³
     if (!node.is_unlocked) {
         int btn_x = panel_x + panel_w / 2 - 50;
         int btn_y = panel_y + panel_h - 50;
@@ -366,18 +373,18 @@ void SkillTree::draw_detail_panel() const {
         int btn_h = 40;
 
         bool purchasable = is_parent_unlocked(node.id) && current_skill_points_ >= node.cost;
-        int btn_color = purchasable ? GetColor(0, 150, 0) : GetColor(50, 50, 50); // ‰ğ•ú‰Â”\‚È‚ç—Î
+        int btn_color = purchasable ? GetColor(0, 150, 0) : GetColor(50, 50, 50); // è§£æ”¾å¯èƒ½ãªã‚‰ç·‘
         int text_color = purchasable ? GetColor(255, 255, 255) : GetColor(150, 150, 150);
 
         DrawBox(btn_x, btn_y, btn_x + btn_w, btn_y + btn_h, btn_color, TRUE);
         DrawBox(btn_x, btn_y, btn_x + btn_w, btn_y + btn_h, GetColor(255, 255, 255), FALSE);
-        DrawFormatString(btn_x + 10, btn_y + 5, text_color, "‰ğ•ú (C:%d)", node.cost);
+        DrawFormatString(btn_x + 10, btn_y + 5, text_color, "è§£æ”¾ (C:%d)", node.cost);
 
         if (!is_parent_unlocked(node.id)) {
-            DrawFormatString(btn_x - 50, btn_y - 20, GetColor(255, 100, 100), "eƒXƒLƒ‹–¢‰ğ•ú");
+            DrawFormatString(btn_x - 50, btn_y - 20, GetColor(255, 100, 100), "è¦ªã‚¹ã‚­ãƒ«æœªè§£æ”¾");
         }
         else if (current_skill_points_ < node.cost) {
-            DrawFormatString(btn_x - 50, btn_y - 20, GetColor(255, 100, 100), "ƒ|ƒCƒ“ƒg•s‘«");
+            DrawFormatString(btn_x - 50, btn_y - 20, GetColor(255, 100, 100), "ãƒã‚¤ãƒ³ãƒˆä¸è¶³");
         }
     }
 }
